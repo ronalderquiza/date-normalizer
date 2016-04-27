@@ -5,111 +5,109 @@ import java.util.regex.Pattern;
  * Created by Ronald Erquiza on 4/7/2016.
  */
 public class DatesNormalizer {
-    String newString = new String();
+    private String newContent;
+    final String REGEX_PATTERN = "((Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?" + //Month (Jan-Jun)
+            "|Jul(y)?|Aug(ust)?|Sep(t(ember)?)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)" + //Month (Jul-Dec)
+            "(\\b\\s*([\\d]{1,2}(st|nd|rd|th)?\\b))?" + //Date
+            "(,?\\s*([\\d]{4}))?)|" +                   //Year
+            "(\\b([\\d]{1,2})?((st|nd|rd|th)\\s*of\\s*)?" + //Date (first) of
+            "(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?" + //Month (Jan-Jun)
+            "|Jul(y)?|Aug(ust)?|Sep(t(ember)?)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)" + //Month (Jul-Dec)
+            "(\\s*([\\d]{4})))";                        //Year
 
-    public DatesNormalizer(){
-        newString = "";
+    DatesNormalizer() {
+
     }
-    public void normalize(String string){
-        String pattern = "([\\d]{1,2})?" +
-                "((st|nd|rd|th)\\s*of\\s*)?" +
-                "(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?" +
-                "|Aug(ust)?|Sep(t(ember)?)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)" +
-                "(\\s*(([\\d]{1,2})" +
-                "(st|nd|rd|th)?)[^a-z0-9])?" +
-                "(,?\\s*([\\d]{4}))?" +
-                "|(\\s*([\\d]{4}))";
-        String month = "null";
-        String date = "null";
-        String year = "null";
-        boolean changed = false;
-        Pattern r = Pattern.compile(pattern);
-        Matcher m = r.matcher(string);
+
+    public String normalize(String content) {
+        return replaceString(content);
+    }
+
+    private String replaceString(String content) {
+        Pattern r = Pattern.compile(REGEX_PATTERN);
+        Matcher m = r.matcher(content);
+        String wholeDate = new String();
+        String dateFormat = new String();
         if (m.find()) {
-            date = m.group(1)+"";
-            if(date.equals("null"))
-                date = m.group(19)+"";
-            month = m.group(4)+"";
-            if(!month.equals("null"))
-                month = getMonth(month.toUpperCase().substring(0,3))+"";
-
-            year = m.group(22)+"";
-            if(year.equals("null")){
-                year = m.group(24)+"";
+            if (m.group(20) != null) {
+                wholeDate = m.group(20);
+                dateFormat = dateAssignment(m.group(21),getMonth(m.group(24).toUpperCase().substring(0, 3)),m.group(38));
+            } else if (m.group(1) != null) {
+                wholeDate = m.group(1);
+                dateFormat = dateAssignment(m.group(16),getMonth(m.group(2).toUpperCase().substring(0, 3)),m.group(19));
             }
+            newContent = replaceDate(wholeDate, content, dateFormat);
+            replaceString(newContent);
         }
-
-
-
-        if(!year.equals("null")&&!date.equals("null")&&!month.equals("null")){
-            newString =  year+"_"+month+"_"+date;
-            changed = true;
-        }
-        if(year.equals("null")&&!date.equals("null")&&!month.equals("null")) {
-            newString = month+"_"+ date;
-            changed = true;
-        }
-        if(!month.equals("null")&&!year.equals("null")&&date.equals("null")){
-            newString = year + "_" + month;
-            changed = true;
-        }
-        if(!month.equals("null")&&year.equals("null")&&!date.equals("null")){
-            newString = month + "_" + date;
-            changed = true;
-        }
-        if(changed){
-            newString = string.substring(0,m.start())+ newString +string.substring(m.end(),string.length());
-        }
-        else{
-            newString = string;
-        }
+        return newContent;
     }
 
-    public static String getMonth(String mon){
-        String month = new String();
-        if(mon.equals("JAN")){
-            month =  "JANUARY";
-        }
-        else if(mon.equals("FEB")){
-            month =  "FEBRUARY";
-        }
-        else if(mon.equals("MAR")){
-            month =  "MARCH";
-        }
-        else if(mon.equals("APR")){
-            month =  "APRIL";
-        }
-        else if(mon.equals("MAY")){
-            month =  "MAY";
-        }
-        else if(mon.equals("JUN")){
-            month =  "JUNE";
-        }
-        else if(mon.equals("JUL")){
-            month =  "JULY";
-        }
-        else if(mon.equals("AUG")){
-            month =  "AUGUST";
-        }
-        else if(mon.equals("SEP")){
-            month =  "SEPTEMBER";
-        }
-        else if(mon.equals("OCT")){
-            month =  "OCTOBER";
-        }
-        else if(mon.equals("NOV")){
-            month =  "NOVEMBER";
-        }
-        else if(mon.equals("DEC")){
-            month = "DECEMBER";
+    private String dateAssignment(String date, String month, String year){
+        return dateFormatting(year, month, date);
+    }
+    private String getMonth(String mon) {
+        String month = "";
+        switch (mon) {
+            case "JAN":
+                month = "JANUARY";
+                break;
+            case "FEB":
+                month = "FEBRUARY";
+                break;
+            case "MAR":
+                month = "MARCH";
+                break;
+            case "APR":
+                month = "APRIL";
+                break;
+            case "MAY":
+                month = "MAY";
+                break;
+            case "JUN":
+                month = "JUNE";
+                break;
+            case "JUL":
+                month = "JULY";
+                break;
+            case "AUG":
+                month = "AUGUST";
+                break;
+            case "SEP":
+                month = "SEPTEMBER";
+                break;
+            case "OCT":
+                month = "OCTOBER";
+                break;
+            case "NOV":
+                month = "NOVEMBER";
+                break;
+            case "DEC":
+                month = "DECEMBER";
+                break;
         }
 
         return month;
-
     }
 
-    public String getText(){
-        return newString;
+    private String dateFormatting(String year, String month, String date) {
+        if (month != null && year != null && date == null) {
+            return year + "_" + month;
+        }
+        if (year == null && date != null && month != null) {
+            return month + "_" + date;
+        }
+        if (year != null && date != null && month != null) {
+            return year + "_" + month + "_" + date;
+        }
+        return "";
     }
 
+    private String replaceDate(String datePattern, String content, String date) {
+        Pattern r = Pattern.compile(datePattern);
+        Matcher m = r.matcher(content);
+        if (m.find()) {
+            return content.substring(0, m.start()) + date + content.substring(m.end(), content.length());
+        }
+        return content;
+    }
 }
